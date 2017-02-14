@@ -25,6 +25,7 @@ while (<INFILE>) {
 
     if ($_ =~ /^#/) {
 	print "$_\n";
+	next;
     }
 
     #turns the current delimited line into an array of values
