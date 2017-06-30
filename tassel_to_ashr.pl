@@ -66,7 +66,7 @@ while (<INFILE2>) {
 	$marker_effect_info{'marker_obs_n1'} =  $row[6];
 
 	if ($effects_lookup{$marker_name}) { 
-	    die "Markers in wrong order in file -e\n";
+	    die "Markers in wrong order in -e file at marker $marker_name\n";
 	}
 	#####
 	$effects_lookup{$marker_name} = \%marker_effect_info;
