@@ -126,7 +126,10 @@ while (<INFILE>) {
     if ($marker_lookup) {
     
 	print $row[0]."\t".$row[1]."\t".$row[2]."\t".$row[3]."\t".$row[6]."\t";
-	print $marker_lookup->{'marker_effect'}."\t";
+	my $marker_effect = $marker_lookup->{'marker_effect'};
+	my $stdev = sqrt($row[15]);
+	my $zscore = $marker_effect/$stdev;
+	print $zscore."\t";
 	my $res_var = $row[16];
 	my $obs_1 = $marker_lookup->{'marker_obs_n1'};
 	my $obs_0 = $marker_lookup->{'marker_obs_n0'};
