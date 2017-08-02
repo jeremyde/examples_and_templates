@@ -79,18 +79,19 @@ while (<INFILE>) {
     if ($current_chromosome) {
 	if ($row[$chr_col] ne $current_chromosome) {
 	    print stderr "Finished chr $current_chromosome, starting chr ".$row[$chr_col]."\n";
-	    $current_chromosome = $row[$chr_col];
 	    if ($segment_open == 1) {
 		$segment_end = $segment_last;
 		my %segment_hash;
-		$segment_hash{'chr'} = $row[$chr_col];
+		$segment_hash{'chr'} = $current_chromosome;
 		$segment_hash{'start'} = $segment_start;
 		$segment_hash{'end'} = $segment_end;
 		$segment_hash{'peak'} = $peak_snp;
 		$segment_hash{'peak_val'} = $peak_snp_value;
+		print stderr "current_chromosome $segment_start $segment_end $peak_snp $peak_snp_value\n";
 		push @segments_discovered, \%segment_hash;
 		$segment_open = 0;
 	    }
+	    $current_chromosome = $row[$chr_col];
 	}
     }
 
@@ -118,6 +119,7 @@ while (<INFILE>) {
 	$segment_hash{'peak'} = $peak_snp;
 	$segment_hash{'peak_val'} = $peak_snp_value;
 	$segment_hash{'merged'} = "single";
+	print stderr "$current_chromosome $segment_start $segment_end $peak_snp $peak_snp_value\n";
 	push @segments_discovered, \%segment_hash;
 	$segment_open = 0;
 	print stderr "Segment saved\n";
@@ -126,7 +128,8 @@ while (<INFILE>) {
     #segment is open and not past extend distance
     if (-log10($row[$sig_col]) > $opt_e) {
 	$segment_last = $row[$bp_col];
-	if (-log10($row[$sig_col]) > $peak_snp_value) {
+	if (-log10($row[$sig_col]) > -log10($peak_snp_value)) {
+	    #print stderr "updating peak snp $peak_snp value $peak_snp_value to $row[$sig_col]\n";
 	    $peak_snp = $row[$bp_col];
 	    $peak_snp_value = $row[$sig_col];
 	}
@@ -189,10 +192,6 @@ foreach my $segment (@segments_discovered) {
 	next;
  
     } else {
-	#if there is a previous merged segment being build, print it now
-	#if ($last_segment->{'merged'} eq "merged") {
-	#    write_scaffold();
-	#}
 	#print the current segment
 	write_scaffold();
 	$last_segment = $segment;
