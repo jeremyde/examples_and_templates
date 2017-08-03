@@ -10,10 +10,10 @@ use DateTime qw( );
 our ($opt_s, $opt_g);
 getopts('s:g:');
 if (!$opt_s) {
-    print STDERR "\nSegment input file name (-i) required\n\n\n";
+    print STDERR "\nSegment input file name (-s) required\n\n\n";
 }
 if (!$opt_g) {
-    print STDERR "\nGene list file name (-i) required\n\n\n";
+    print STDERR "\nGene list file name (-g) required\n\n\n";
 }
 
 open GENEFILE, "<", $opt_g or die "No such input file $opt_g";
