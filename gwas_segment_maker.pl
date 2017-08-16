@@ -14,11 +14,34 @@ our ($opt_i, $opt_c, $opt_t, $opt_e, $opt_d, $opt_j);
 getopts('i:c:t:e:d:j:');
 if (!$opt_i) {
     print STDERR "\nInput file name (-i) required\n\n\n";
+    die;
 }
-#todo: check other opts
+if (!$opt_c) {
+    print STDERR "\nSignificance column name (-c) required\n\n\n";
+    die;
+}
+if (!$opt_t) {
+    print STDERR "\n-Log10 significance threshold (-t) required\n\n\n";
+    die;
+}
+if (!$opt_e) {
+    print STDERR "\n-Log10 segment extension significance threshold (-e) required\n\n\n";
+    die;
+}
+if (!$opt_d) {
+    print STDERR "\Distance surrounding segment (-d) required\n\n\n";
+    die;
+}
+if (!$opt_j) {
+    print STDERR "\nSegment join distance (-j) required\n\n\n";
+    die;
+}
+#todo: make help option to print and explain options
+
 
 #open the file or die
 open INFILE, "<", $opt_i or die "No such input file $opt_i";
+
 
 my $first_line = 1; #used to recognize the header;
 my @header_row;
@@ -148,6 +171,11 @@ my $scaf_end;
 my $scaf_peak_snp;
 my $scaf_peak_snp_val;
 my $last_segment_printed = 0;
+
+if (scalar @segments_discovered == 0) {
+    print STDERR "No segments found\n";
+    die();
+}
 
 #print the header to the output
 print "CHR\tStart\tStop\tPeak\tPeak_val\tMerged\n";
