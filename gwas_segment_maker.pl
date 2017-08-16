@@ -174,62 +174,61 @@ my $last_segment_printed = 0;
 
 if (scalar @segments_discovered == 0) {
     print STDERR "No segments found\n";
-    die();
-}
+    print "No segments found\n";
+} else {
 
-#print the header to the output
-print "CHR\tStart\tStop\tPeak\tPeak_val\tMerged\n";
+    #print the header to the output
+    print "CHR\tStart\tStop\tPeak\tPeak_val\tMerged\n";
 
-sub write_scaffold {
-    #print $last_segment->{'chr'}."\t".$last_segment->{'start'} - $opt_d."\t".$last_segment->{'end'} + $opt_d."\t".$last_segment->{'peak'}."\t".$last_segment->{'peak_val'}."\t".$last_segment->{'merged'}."\n";
-    my $adj_start = $last_segment->{'start'} - $opt_d;
-    my $adj_end = $last_segment->{'end'} + $opt_d;
-    print $last_segment->{'chr'}."\t".$adj_start."\t".$adj_end."\t".$last_segment->{'peak'}."\t".$last_segment->{'peak_val'}."\t".$last_segment->{'merged'}."\n";
-}
-
-foreach my $segment (@segments_discovered) {
-    if ($first_segment == 1) {
-	$current_chromosome = $segment->{'chr'};
-	$first_segment = 0;
-	$last_segment = $segment;
-	next;
+    sub write_scaffold {
+	my $adj_start = $last_segment->{'start'} - $opt_d;
+	my $adj_end = $last_segment->{'end'} + $opt_d;
+	print $last_segment->{'chr'}."\t".$adj_start."\t".$adj_end."\t".$last_segment->{'peak'}."\t".$last_segment->{'peak_val'}."\t".$last_segment->{'merged'}."\n";
     }
-    $last_segment_printed = 1;
 
-    #catch and print joined segments at end of chromosome
-    if ($segment->{'chr'} ne $last_segment->{'chr'}) {
-	if ($last_segment_printed == 0) {
+    foreach my $segment (@segments_discovered) {
+	if ($first_segment == 1) {
+	    $current_chromosome = $segment->{'chr'};
+	    $first_segment = 0;
+	    $last_segment = $segment;
+	    next;
+	}
+	$last_segment_printed = 1;
+
+	#catch and print joined segments at end of chromosome
+	if ($segment->{'chr'} ne $last_segment->{'chr'}) {
+	    if ($last_segment_printed == 0) {
+		write_scaffold();
+		$last_segment_printed = 1;
+	    }
+	}
+
+	#see if within join distance
+	if (($segment->{'chr'} eq $last_segment->{'chr'}) && ($last_segment->{'end'} + $opt_j > $segment->{'start'})) {
+	    print stderr "Merging adjacent scaffolds :".$last_segment->{'chr'}." ".$last_segment->{'start'}." ".$last_segment->{'end'}."\n";
+	    $last_segment->{'end'} = $segment->{'end'};
+	    #$last_segment->{'end'} = 0;
+	    $last_segment->{'merged'} = "merged";
+	    if ($last_segment->{'peak_val'} > $segment->{'peak_val'}) {
+		$last_segment->{'peak_val'} = $segment->{'peak_val'};
+		$last_segment->{'peak'} eq $segment->{'peak'};
+	    }
+	    print stderr "New end is :".$last_segment->{'end'}."\n";
+	    $last_segment_printed = 0;
+	    #write_scaffold();
+	    next;
+	    
+	} else {
+	    #print the current segment
 	    write_scaffold();
+	    $last_segment = $segment;
 	    $last_segment_printed = 1;
 	}
     }
 
-    #see if within join distance
-    if (($segment->{'chr'} eq $last_segment->{'chr'}) && ($last_segment->{'end'} + $opt_j > $segment->{'start'})) {
-	print stderr "Merging adjacent scaffolds :".$last_segment->{'chr'}." ".$last_segment->{'start'}." ".$last_segment->{'end'}."\n";
-	$last_segment->{'end'} = $segment->{'end'};
-	#$last_segment->{'end'} = 0;
-	$last_segment->{'merged'} = "merged";
-	if ($last_segment->{'peak_val'} > $segment->{'peak_val'}) {
-	    $last_segment->{'peak_val'} = $segment->{'peak_val'};
-	    $last_segment->{'peak'} eq $segment->{'peak'};
-	}
-	print stderr "New end is :".$last_segment->{'end'}."\n";
-	$last_segment_printed = 0;
-	#write_scaffold();
-	next;
- 
-    } else {
-	#print the current segment
-	write_scaffold();
-	$last_segment = $segment;
-	$last_segment_printed = 1;
-    }
+    #write last scaffold
+    write_scaffold();
 }
-
-#write last scaffold
-write_scaffold();
-
 # todo: collect and print stats
     
 
