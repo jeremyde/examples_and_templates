@@ -29,7 +29,7 @@ if (!$opt_e) {
     die;
 }
 if (!$opt_d) {
-    print STDERR "\Distance surrounding segment (-d) required\n\n\n";
+    print STDERR "\nDistance surrounding segment (-d) required\n\n\n";
     die;
 }
 if (!$opt_j) {
@@ -37,7 +37,10 @@ if (!$opt_j) {
     die;
 }
 #todo: make help option to print and explain options
-
+if ($opt_d*2 >= $opt_j) {
+    print STDERR "\nSegment join distance (-j) must be at least two times the distance surrounding the segment (-d)\n\n\n";
+    die;
+}
 
 #open the file or die
 open INFILE, "<", $opt_i or die "No such input file $opt_i";
@@ -54,6 +57,9 @@ my $peak_snp_value;
 my @segments_discovered;
 
 my $segment_open = 0;
+my $back_extend_segment_open = 0;
+my $back_extend_start;
+my $back_extend_current;
 my $segment_start;
 my $segment_end;
 my $segment_last;
@@ -114,11 +120,38 @@ while (<INFILE>) {
 		print stderr "current_chromosome $segment_start $segment_end $peak_snp $peak_snp_value\n";
 		push @segments_discovered, \%segment_hash;
 		$segment_open = 0;
+		$back_extend_segment_open = 0;
 	    }
 	    $current_chromosome = $row[$chr_col];
 	}
     }
 
+    # keep track of how far back an extend threshold goes.
+    if ($back_extend_segment_open == 0 ) {
+	if (-log10($row[$sig_col]) > $opt_e) {
+	    $back_extend_segment_open = 1;
+	    $back_extend_start = $row[$bp_col];
+	    $back_extend_current = $row[$bp_col];
+	}
+    } else {
+	if ($row[$bp_col] > $back_extend_current + $opt_d) {
+	    if (-log10($row[$sig_col]) > $opt_e) {
+		#last extend is over but start a new one
+		$back_extend_start = $row[$bp_col];
+		$back_extend_current = $row[$bp_col];
+		#keep extend open but set new values
+	    } else {
+		#past the extend distance so close the extend
+		$back_extend_segment_open = 0;
+	    }
+	} else {
+	    #still within extend distance
+	    if (-log10($row[$sig_col]) > $opt_e) {
+		#update the current last extend position if crossing extend threshold within the extend distance
+		$back_extend_current = $row[$bp_col];
+	    }
+	}
+    }
     # open a new segment for significant SNPs if not already open
     if ($segment_open == 0) {
 	#skip non significant rows
@@ -182,7 +215,12 @@ if (scalar @segments_discovered == 0) {
     print "CHR\tStart\tStop\tPeak\tPeak_val\tMerged\n";
 
     sub write_scaffold {
+	#adjust tracking threshold backwards
+	if ($back_extend_segment_open == 1 && $last_segment->{'start'} - $back_extend_current < $opt_d) {
+	    $last_segment->{'start'} = $back_extend_start;
+	}
 	my $adj_start = $last_segment->{'start'} - $opt_d;
+	#don't extend past chromosome ends
 	if ($adj_start < 1) {
 	    $adj_start = 1;
 	}
@@ -190,6 +228,7 @@ if (scalar @segments_discovered == 0) {
 	if ($chr_max_pos{$last_segment->{'chr'}} < $adj_end) {
 	    $adj_end = $chr_max_pos{$last_segment->{'chr'}};
 	}
+	#print the segment
 	print $last_segment->{'chr'}."\t".$adj_start."\t".$adj_end."\t".$last_segment->{'peak'}."\t".$last_segment->{'peak_val'}."\t".$last_segment->{'merged'}."\n";
     }
 
