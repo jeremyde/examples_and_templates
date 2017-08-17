@@ -58,6 +58,7 @@ my $segment_start;
 my $segment_end;
 my $segment_last;
 my $current_chromosome;
+my %chr_max_pos;
 
 #reads the file line by line
 while (<INFILE>) {
@@ -90,8 +91,8 @@ while (<INFILE>) {
 
     my @row =  split('\t', $_);
 
-    #todo: add check for new chromosome
-
+    #keep track of max chromosome positions
+    $chr_max_pos{$row[$chr_col]} = $row[$bp_col];
 
     #skip missing data
     if ($row[$sig_col] eq 'NaN') {
@@ -182,7 +183,13 @@ if (scalar @segments_discovered == 0) {
 
     sub write_scaffold {
 	my $adj_start = $last_segment->{'start'} - $opt_d;
+	if ($adj_start < 1) {
+	    $adj_start = 1;
+	}
 	my $adj_end = $last_segment->{'end'} + $opt_d;
+	if ($chr_max_pos{$last_segment->{'chr'}} < $adj_end) {
+	    $adj_end = $chr_max_pos{$last_segment->{'chr'}};
+	}
 	print $last_segment->{'chr'}."\t".$adj_start."\t".$adj_end."\t".$last_segment->{'peak'}."\t".$last_segment->{'peak_val'}."\t".$last_segment->{'merged'}."\n";
     }
 
