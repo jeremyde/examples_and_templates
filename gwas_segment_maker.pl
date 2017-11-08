@@ -216,9 +216,10 @@ if (scalar @segments_discovered == 0) {
 
     sub write_scaffold {
 	#adjust tracking threshold backwards
-	if ($back_extend_segment_open == 1 && $last_segment->{'start'} - $back_extend_current < $opt_d) {
-	    $last_segment->{'start'} = $back_extend_start;
-	}
+#	if ($back_extend_segment_open == 1 && $last_segment->{'start'} - $back_extend_current < $opt_d) #{
+#	    $last_segment->{'start'} = $back_extend_start;
+#	    $back_extend_segment_open == 0;
+#	}
 	my $adj_start = $last_segment->{'start'} - $opt_d;
 	#don't extend past chromosome ends
 	if ($adj_start < 1) {
@@ -255,9 +256,9 @@ if (scalar @segments_discovered == 0) {
 	    $last_segment->{'end'} = $segment->{'end'};
 	    #$last_segment->{'end'} = 0;
 	    $last_segment->{'merged'} = "merged";
-	    if ($last_segment->{'peak_val'} > $segment->{'peak_val'}) {
+	    if (-log10($last_segment->{'peak_val'}) < -log10($segment->{'peak_val'})) {
 		$last_segment->{'peak_val'} = $segment->{'peak_val'};
-		$last_segment->{'peak'} eq $segment->{'peak'};
+		$last_segment->{'peak'} = $segment->{'peak'};
 	    }
 	    print stderr "New end is :".$last_segment->{'end'}."\n";
 	    $last_segment_printed = 0;
