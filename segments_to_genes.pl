@@ -44,12 +44,12 @@ my @segmentpeakvals;
 
 my $firstline = 1;
 while (<SEGFILE>) {
+    chomp $_; #strips the new line character from the current input
     #skip header
     if ($firstline == 1) {
 	$firstline = 0;
 	next;
     }
-    chomp $_; #strips the new line character from the current input
     my @row =  split('\t', $_);
     push @segmentchromosomes, $row[0];
     push @segmentstarts, $row[1];

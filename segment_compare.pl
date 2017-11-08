@@ -89,7 +89,10 @@ sub print_overlaps {
 	    #print stderr "Printing group\n";
 	    $overlap_counter++;
 	    print "\n\tChr\tStart\tEnd\t\Peak_SNP\tLength\tTrait\n";
-	    foreach my $r_segment (@{$overlap_group_info->{'segments'}}) {
+	    
+	    my @print_segments_sorted  = sort { $a->{'name'} cmp $b->{'name'} } @{$overlap_group_info->{'segments'}};
+	    #foreach my $r_segment (@{$overlap_group_info->{'segments'}}) {
+	    foreach my $r_segment (@print_segments_sorted) {
 		print "\t".$r_segment->{'chr'}."\t".
 		    commify($r_segment->{'start'})."\t".
 		    commify($r_segment->{'stop'})."\t".
