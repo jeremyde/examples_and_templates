@@ -117,7 +117,6 @@ foreach my $segment (@segments_sorted) {
     if ($chromosome) {
 	if ($chromosome ne $segment->{'chr'}) {
 	    if ($overlap_group_info) { 
-		#print STDERR scalar @{$overlap_group_info->{'segments'}}."s\n";
 		print_overlaps();		
 		$overlap_group_info = 0;
 		$overlap_start = 0;
@@ -126,27 +125,25 @@ foreach my $segment (@segments_sorted) {
 	}
     }
     $chromosome = $segment->{'chr'};
-
     if ($overlap_group_info) {
 	if ($segment->{'start'} <= $overlap_group_info->{'stop'}) {
-	    #print STDERR "Found an overlap group\n";
 	    if ($overlap_group_info->{'stop'} < $segment->{'stop'}) {
 		$overlap_group_info->{'stop'} = $segment->{'stop'};
 	    }
 	    push @{$overlap_group_info->{'segments'}}, $segment;
+	    next;
 	} else {
 	    print_overlaps();
 	}
-    } else {
-	my %ginfo;
-	my @overlap_array;
-	$overlap_group_info = \%ginfo;
-	$overlap_group_info->{'chr'} = $segment->{'chr'};
-	$overlap_group_info->{'start'} = $segment->{'start'};
-	$overlap_group_info->{'stop'} = $segment->{'stop'};
-	$overlap_group_info->{'segments'} = \@overlap_array;
-	push(@{$overlap_group_info->{'segments'}}, $segment);
     }
+    my %ginfo;
+    my @overlap_array;
+    $overlap_group_info = \%ginfo;
+    $overlap_group_info->{'chr'} = $segment->{'chr'};
+    $overlap_group_info->{'start'} = $segment->{'start'};
+    $overlap_group_info->{'stop'} = $segment->{'stop'};
+    $overlap_group_info->{'segments'} = \@overlap_array;
+    push(@{$overlap_group_info->{'segments'}}, $segment);
 }
 
 #take care of last one in case of overlap extending to the end of the last chromosome
