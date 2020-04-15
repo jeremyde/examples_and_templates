@@ -27,6 +27,9 @@ if (!$opt_i) {
 my @accessions;
 my @markers;
 
+my %markerchr;
+my %markerpos;
+
 my $firstline = 1;
 my $secondline = 1;
 my @prev_row;
@@ -37,7 +40,9 @@ open INFILE, "<", $opt_i or die "No such input file $opt_i";
 while (<INFILE>) {
     chomp $_;
     if ($firstline == 1) {
-	print $_."\n";
+	my @header = split('\t',$_);
+	my @header = @header[1.. $#header];
+	print "SNP\tRange\t".join("\t",@header)."\n";
 	$firstline = 0;
 	next;
     }
@@ -45,6 +50,8 @@ while (<INFILE>) {
     my $marker = $row[0];
     push @markers, $marker;
     my @markerinfo = split('_',$marker);
+    $markerchr{$marker} = $markerinfo[0];
+    $markerpos{$marker} = $markerinfo[1];
     @row = @row[1 .. $#row];
 
     if ($secondline == 1) {
@@ -61,7 +68,19 @@ while (<INFILE>) {
     else {
 	my @startmarkerinfo = split('_',$bin_start_marker);
 	my @endmarkerinfo = split('_',$bin_end_marker);
-	print $markerinfo[0]."_".$startmarkerinfo[1]."-".$markerinfo[1]."\t";
+	my $centerpos = ($markerinfo[1] - $startmarkerinfo[1])/2 + $startmarkerinfo[1];
+	my $closest_to_center=10000000000;
+	my $centermarker;
+	foreach my $checkmarker (@markers) {
+	    if ($markerchr{$checkmarker} eq $markerinfo[0]) {
+		my $markerdist = abs($markerpos{$checkmarker} - $centerpos);
+		    if ( $markerdist < $closest_to_center) {
+			$closest_to_center = $markerdist;
+			$centermarker = $checkmarker;
+		}
+	    }
+	}
+	print $centermarker."\t".$markerinfo[0]."_".$startmarkerinfo[1]."-".$markerinfo[1]."\t";
 	print join("\t",@prev_row)."\n";
 	@prev_row = @row;
 	$bin_start_marker = $bin_end_marker;
@@ -73,6 +92,18 @@ close INFILE;
 # deal with last line
 my @startmarkerinfo = split('_',$bin_start_marker);
 my @endmarkerinfo = split('_',$bin_end_marker);
-print $startmarkerinfo[0]."_".$startmarkerinfo[1]."-".$endmarkerinfo[1]."\t";
+my $centerpos = ($startmarkerinfo[1] - $endmarkerinfo[1])/2 + $startmarkerinfo[1];
+my $closest_to_center=10000000000;
+my $centermarker;
+foreach my $checkmarker (@markers) {
+    if ($markerchr{$checkmarker} eq $startmarkerinfo[0]) {
+	my $markerdist = abs($markerpos{$checkmarker} - $centerpos);
+	if ( $markerdist < $closest_to_center) {
+	    $closest_to_center = $markerdist;
+	    $centermarker = $checkmarker;
+	}
+    }
+}
+print $centermarker."\t".$startmarkerinfo[0]."_".$startmarkerinfo[1]."-".$endmarkerinfo[1]."\t";
 print join("\t",@prev_row)."\n";
 
