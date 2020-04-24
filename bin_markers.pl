@@ -36,6 +36,8 @@ my @prev_row;
 my $bin_start_marker;
 my $bin_end_marker;
 
+my $prevchr;
+
 open INFILE, "<", $opt_i or die "No such input file $opt_i";
 while (<INFILE>) {
     chomp $_;
@@ -54,16 +56,26 @@ while (<INFILE>) {
     $markerpos{$marker} = $markerinfo[1];
     @row = @row[1 .. $#row];
 
+  
     if ($secondline == 1) {
 	$bin_start_marker = $marker;
 	$bin_end_marker = $marker;
 	@prev_row = @row;
 	$secondline = 0;
+	$prevchr = $markerinfo[0];
     }
 
+    if ($prevchr ne $markerinfo[0]) {
+	$bin_start_marker = $marker;
+	$bin_end_marker = $marker;
+	@prev_row = @row;
+	$prevchr = $markerinfo[0];
+    }
+    
     if (join(",",@row) eq join(",",@prev_row)) {
 	$bin_end_marker = $marker;
 	#note, this will misbehave if end of one chromosome has exact same marker scores as the start of the next
+	#above should be fixed now
     }
     else {
 	my @startmarkerinfo = split('_',$bin_start_marker);
