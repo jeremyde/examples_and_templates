@@ -52,7 +52,6 @@ while (<EFFECTSINFILE>) {
     push @{$effect_lookup->{$chromosome}->{$position}}, $_;
 
 }
-print "Done reading\n";
 #print Dumper($effect_lookup);
 close EFFECTSINFILE;
 
@@ -63,7 +62,6 @@ open SEGMENTINFILE, "<", $opt_s or die "No such input file $opt_e";
 
 $first_line = 1; 
 #reads the segment file line by line
-print "s:$opt_s\n";
 while (<SEGMENTINFILE>) {
     chomp $_; 
     if ($first_line==1) {
